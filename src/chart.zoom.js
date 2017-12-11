@@ -362,7 +362,7 @@ var zoomPlugin = {
 				}
 			};
 			node.addEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-		} else {
+		} else if (options.zoom && options.zoom.enabled) {
 			chartInstance.zoom._wheelHandler = function(event) {
 				var rect = event.target.getBoundingClientRect();
 				var offsetX = event.clientX - rect.left;
@@ -487,7 +487,7 @@ var zoomPlugin = {
 				node.removeEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
 				node.removeEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
 				node.removeEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-			} else {
+			} else if (options.zoom && options.zoom.enabled) {
 				node.removeEventListener('wheel', chartInstance.zoom._wheelHandler);
 			}
 
