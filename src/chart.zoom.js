@@ -319,7 +319,7 @@ var zoomPlugin = {
 		var options = chartInstance.options;
 		var panThreshold = helpers.getValueOrDefault(options.pan ? options.pan.threshold : undefined, zoomNS.defaults.pan.threshold);
 
-		if (options.zoom && options.zoom.drag) {
+		if (options.zoom && options.zoom.enabled) {
 			// Only want to zoom horizontal axis
 			options.zoom.mode = 'x';
 
@@ -329,6 +329,10 @@ var zoomPlugin = {
 			node.addEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
 
 			chartInstance.zoom._mouseMoveHandler = function(event){
+				if (!options.zoom.drag) {
+					return;
+				}
+
 				if (chartInstance.zoom._dragZoomStart) {
 					chartInstance.zoom._dragZoomEnd = event;
 					chartInstance.update(0);
@@ -339,6 +343,10 @@ var zoomPlugin = {
 			node.addEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
 
 			chartInstance.zoom._mouseUpHandler = function(event){
+				if (!options.zoom.drag) {
+					return;
+				}
+
 				if (chartInstance.zoom._dragZoomStart) {
 					var chartArea = chartInstance.chartArea;
 					var yAxis = getYAxis(chartInstance);
@@ -351,19 +359,23 @@ var zoomPlugin = {
 					var zoom = 1 + ((chartDistance - dragDistance) / chartDistance );
 
 					if (dragDistance > 0) {
+						chartInstance.zoom._dragZoomStart = null;
+						chartInstance.zoom._dragZoomEnd = null;
+
 						doZoom(chartInstance, zoom, {
 							x: (dragDistance / 2) + startX,
 							y: (yAxis.bottom - yAxis.top) / 2,
 						});
 					}
-
-					chartInstance.zoom._dragZoomStart = null;
-					chartInstance.zoom._dragZoomEnd = null;
 				}
 			};
 			node.addEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-		} else if (options.zoom && options.zoom.enabled) {
+
 			chartInstance.zoom._wheelHandler = function(event) {
+				if (options.zoom.drag) {
+					return;
+				}
+
 				var rect = event.target.getBoundingClientRect();
 				var offsetX = event.clientX - rect.left;
 				var offsetY = event.clientY - rect.top;
