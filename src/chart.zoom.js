@@ -324,6 +324,10 @@ var zoomPlugin = {
 			options.zoom.mode = 'x';
 
 			chartInstance.zoom._mouseDownHandler = function(event) {
+				if (!options.zoom.drag) {
+					return;
+				}
+
 				chartInstance.zoom._dragZoomStart = event;
 			};
 			node.addEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
@@ -495,11 +499,10 @@ var zoomPlugin = {
 			var options = chartInstance.options;
 			var node = chartInstance.zoom.node;
 
-			if (options.zoom && options.zoom.drag) {
+			if (options.zoom && options.zoom.enabled) {
 				node.removeEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
 				node.removeEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
 				node.removeEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-			} else if (options.zoom && options.zoom.enabled) {
 				node.removeEventListener('wheel', chartInstance.zoom._wheelHandler);
 			}
 
