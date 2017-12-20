@@ -328,7 +328,7 @@ var zoomPlugin = {
 					return;
 				}
 
-				chartInstance.zoom._dragZoomStart = event;
+				chartInstance.zoom._dragZoomStart = event.native;
 			};
 			Chart.platform.addEventListener(chartInstance, 'mousedown', chartInstance.zoom._mouseDownHandler);
 
@@ -338,7 +338,7 @@ var zoomPlugin = {
 				}
 
 				if (chartInstance.zoom._dragZoomStart) {
-					chartInstance.zoom._dragZoomEnd = event;
+					chartInstance.zoom._dragZoomEnd = event.native;
 					chartInstance.update(0);
 				}
 
@@ -375,11 +375,12 @@ var zoomPlugin = {
 			};
 			Chart.platform.addEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
 
-			chartInstance.zoom._wheelHandler = function(event) {
+			chartInstance.zoom._wheelHandler = function(chartEvent) {
 				if (options.zoom.drag) {
 					return;
 				}
 
+				var event = chartEvent.native;
 				var rect = event.target.getBoundingClientRect();
 				var offsetX = event.clientX - rect.left;
 				var offsetY = event.clientY - rect.top;
