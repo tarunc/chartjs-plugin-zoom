@@ -346,12 +346,13 @@ var zoomPlugin = {
 			};
 			Chart.platform.addEventListener(chartInstance, 'mousemove', chartInstance.zoom._mouseMoveHandler);
 
-			chartInstance.zoom._mouseUpHandler = function(event){
+			chartInstance.zoom._mouseUpHandler = function(chartEvent){
 				if (!options.zoom.drag) {
 					return;
 				}
 
 				if (chartInstance.zoom._dragZoomStart) {
+					var event = chartEvent.native;
 					var chartArea = chartInstance.chartArea;
 					var yAxis = getYAxis(chartInstance);
 					var beginPoint = chartInstance.zoom._dragZoomStart;
