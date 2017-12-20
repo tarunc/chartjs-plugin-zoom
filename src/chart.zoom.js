@@ -465,7 +465,7 @@ var zoomPlugin = {
 					e.preventDefault();
 				}
 			};
-			Chart.platform.addEventListener(chartInstance, 'click', chartInstance.zoom._ghostClickHandler);
+			node.addEventListener('click', chartInstance.zoom._ghostClickHandler);
 
 			chartInstance._mc = mc;
 		}
@@ -531,7 +531,7 @@ var zoomPlugin = {
 			}
 
 			if (Hammer) {
-				Chart.platform.removeEventListener(chartInstance, 'click', chartInstance.zoom._ghostClickHandler);
+				node.removeEventListener('click', chartInstance.zoom._ghostClickHandler);
 			}
 
 			delete chartInstance.zoom;
