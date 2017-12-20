@@ -330,7 +330,7 @@ var zoomPlugin = {
 
 				chartInstance.zoom._dragZoomStart = event;
 			};
-			node.addEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
+			Chart.platform.addEventListener(chartInstance, 'mousedown', chartInstance.zoom._mouseDownHandler);
 
 			chartInstance.zoom._mouseMoveHandler = function(event){
 				if (!options.zoom.drag) {
@@ -344,7 +344,7 @@ var zoomPlugin = {
 
 				chartInstance.update(0);
 			};
-			node.addEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
+			Chart.platform.addEventListener(chartInstance, 'mousemove', chartInstance.zoom._mouseMoveHandler);
 
 			chartInstance.zoom._mouseUpHandler = function(event){
 				if (!options.zoom.drag) {
@@ -373,7 +373,7 @@ var zoomPlugin = {
 					}
 				}
 			};
-			node.addEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
+			Chart.platform.addEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
 
 			chartInstance.zoom._wheelHandler = function(event) {
 				if (options.zoom.drag) {
@@ -398,7 +398,7 @@ var zoomPlugin = {
 				event.preventDefault();
 			};
 
-			node.addEventListener('wheel', chartInstance.zoom._wheelHandler);
+			Chart.platform.addEventListener(chartInstance, 'wheel', chartInstance.zoom._wheelHandler);
 		}
 
 		if (Hammer) {
@@ -430,6 +430,10 @@ var zoomPlugin = {
 
 			var currentDeltaX = null, currentDeltaY = null, panning = false;
 			var handlePan = function handlePan(e) {
+				if (!options.pan || !options.pan.enabled) {
+					return;
+				}
+
 				if (currentDeltaX !== null && currentDeltaY !== null) {
 					panning = true;
 					var deltaX = e.deltaX - currentDeltaX;
@@ -459,9 +463,27 @@ var zoomPlugin = {
 					e.preventDefault();
 				}
 			};
-			node.addEventListener('click', chartInstance.zoom._ghostClickHandler);
+			Chart.platform.addEventListener(chartInstance, 'click', chartInstance.zoom._ghostClickHandler);
 
 			chartInstance._mc = mc;
+		}
+	},
+
+	beforeDraw: function(chartInstance) {
+		var datasets = chartInstance.data.datasets;
+		var meta, i, j, ilen, jlen;
+
+		for (i = 0, ilen = datasets.length; i < ilen; ++i) {
+			if (!chartInstance.isDatasetVisible(i)) {
+				continue;
+			}
+
+			meta = chartInstance.getDatasetMeta(i);
+			for (j = 0, jlen = meta.data.length; j < jlen; ++j) {
+				var view = meta.data[j]._view;
+				var xScale = meta.data[j]._xScale;
+				view.skip = (view.x < xScale.left || view.x > xScale.right);
+			}
 		}
 	},
 
@@ -500,14 +522,14 @@ var zoomPlugin = {
 			var node = chartInstance.zoom.node;
 
 			if (options.zoom && options.zoom.enabled) {
-				node.removeEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
-				node.removeEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
-				node.removeEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-				node.removeEventListener('wheel', chartInstance.zoom._wheelHandler);
+				Chart.platform.removeEventListener(chartInstance, 'mousedown', chartInstance.zoom._mouseDownHandler);
+				Chart.platform.removeEventListener(chartInstance, 'mousemove', chartInstance.zoom._mouseMoveHandler);
+				Chart.platform.removeEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
+				Chart.platform.removeEventListener(chartInstance, 'wheel', chartInstance.zoom._wheelHandler);
 			}
 
 			if (Hammer) {
-				node.removeEventListener('click', chartInstance.zoom._ghostClickHandler);
+				Chart.platform.removeEventListener(chartInstance, 'click', chartInstance.zoom._ghostClickHandler);
 			}
 
 			delete chartInstance.zoom;
