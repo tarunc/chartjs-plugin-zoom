@@ -376,12 +376,11 @@ var zoomPlugin = {
 			};
 			Chart.platform.addEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
 
-			chartInstance.zoom._wheelHandler = function(chartEvent) {
+			chartInstance.zoom._wheelHandler = function(event) {
 				if (options.zoom.drag) {
 					return;
 				}
 
-				var event = chartEvent.native;
 				var rect = event.target.getBoundingClientRect();
 				var offsetX = event.clientX - rect.left;
 				var offsetY = event.clientY - rect.top;
@@ -400,7 +399,7 @@ var zoomPlugin = {
 				event.preventDefault();
 			};
 
-			Chart.platform.addEventListener(chartInstance, 'wheel', chartInstance.zoom._wheelHandler);
+			node.addEventListener('wheel', chartInstance.zoom._wheelHandler);
 		}
 
 		if (Hammer) {
@@ -527,7 +526,7 @@ var zoomPlugin = {
 				Chart.platform.removeEventListener(chartInstance, 'mousedown', chartInstance.zoom._mouseDownHandler);
 				Chart.platform.removeEventListener(chartInstance, 'mousemove', chartInstance.zoom._mouseMoveHandler);
 				Chart.platform.removeEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
-				Chart.platform.removeEventListener(chartInstance, 'wheel', chartInstance.zoom._wheelHandler);
+				node.removeEventListener('wheel', chartInstance.zoom._wheelHandler);
 			}
 
 			if (Hammer) {
