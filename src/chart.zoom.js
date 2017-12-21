@@ -248,8 +248,8 @@ function doPan(chartInstance, deltaX, deltaY) {
 			}
 		});
 
-		if (zoomOptions.onPan) {
-			zoomOptions.onPan.call(chartInstance, deltaX, deltaY);
+		if (panOptions.onPan) {
+			panOptions.onPan.call(chartInstance, deltaX, deltaY);
 		}
 
 		chartInstance.update(0);
