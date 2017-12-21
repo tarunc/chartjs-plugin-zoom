@@ -175,6 +175,10 @@ function doZoom(chartInstance, zoom, center) {
 			}
 		});
 
+		if (zoomOptions.onZoom) {
+			zoomOptions.onZoom.call(chartInstance, zoom, center);
+		}
+
 		chartInstance.update(0);
 	}
 }
@@ -243,6 +247,10 @@ function doPan(chartInstance, deltaX, deltaY) {
 				panScale(scale, deltaY, panOptions);
 			}
 		});
+
+		if (zoomOptions.onPan) {
+			zoomOptions.onPan.call(chartInstance, deltaX, deltaY);
+		}
 
 		chartInstance.update(0);
 	}
