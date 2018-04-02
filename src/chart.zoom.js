@@ -332,7 +332,7 @@ var zoomPlugin = {
 			options.zoom.mode = 'x';
 
 			chartInstance.zoom._mouseDownHandler = function(event) {
-				if (!options.zoom.drag) {
+				if (!chartInstance.options.zoom.drag) {
 					return;
 				}
 
@@ -341,7 +341,7 @@ var zoomPlugin = {
 			Chart.platform.addEventListener(chartInstance, 'mousedown', chartInstance.zoom._mouseDownHandler);
 
 			chartInstance.zoom._mouseMoveHandler = function(event){
-				if (!options.zoom.drag) {
+				if (!chartInstance.options.zoom.drag) {
 					return;
 				}
 
@@ -355,7 +355,7 @@ var zoomPlugin = {
 			Chart.platform.addEventListener(chartInstance, 'mousemove', chartInstance.zoom._mouseMoveHandler);
 
 			chartInstance.zoom._mouseUpHandler = function(chartEvent){
-				if (!options.zoom.drag) {
+				if (!chartInstance.options.zoom.drag) {
 					return;
 				}
 
@@ -385,7 +385,7 @@ var zoomPlugin = {
 			Chart.platform.addEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
 
 			chartInstance.zoom._wheelHandler = function(event) {
-				if (options.zoom.drag) {
+				if (chartInstance.options.zoom.drag) {
 					return;
 				}
 
