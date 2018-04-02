@@ -208,6 +208,10 @@ function doZoom(chartInstance, zoom, center, whichAxes) {
 			}
 		});
 
+		if (zoomOptions.onZoom) {
+			zoomOptions.onZoom.call(chartInstance, zoom, center);
+		}
+
 		chartInstance.update(0);
 	}
 }
@@ -281,6 +285,10 @@ function doPan(chartInstance, deltaX, deltaY) {
 				panScale(scale, deltaY, panOptions);
 			}
 		});
+
+		if (panOptions.onPan) {
+			panOptions.onPan.call(chartInstance, deltaX, deltaY);
+		}
 
 		chartInstance.update(0);
 	}
@@ -356,30 +364,41 @@ var zoomPlugin = {
 
 		var options = chartInstance.options;
 		var panThreshold = helpers.getValueOrDefault(options.pan ? options.pan.threshold : undefined, zoomNS.defaults.pan.threshold);
-		if (!options.zoom || !options.zoom.enabled) {
-			return;
-		}
-		if (options.zoom.drag) {
+
+		if (options.zoom && options.zoom.enabled) {
 			// Only want to zoom horizontal axis
 			options.zoom.mode = 'x';
 
 			chartInstance.zoom._mouseDownHandler = function(event) {
-				chartInstance.zoom._dragZoomStart = event;
+				if (!chartInstance.options.zoom.drag) {
+					return;
+				}
+
+				chartInstance.zoom._dragZoomStart = event.native;
 			};
-			node.addEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
+			Chart.platform.addEventListener(chartInstance, 'mousedown', chartInstance.zoom._mouseDownHandler);
 
 			chartInstance.zoom._mouseMoveHandler = function(event){
+				if (!chartInstance.options.zoom.drag) {
+					return;
+				}
+
 				if (chartInstance.zoom._dragZoomStart) {
-					chartInstance.zoom._dragZoomEnd = event;
+					chartInstance.zoom._dragZoomEnd = event.native;
 					chartInstance.update(0);
 				}
 
 				chartInstance.update(0);
 			};
-			node.addEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
+			Chart.platform.addEventListener(chartInstance, 'mousemove', chartInstance.zoom._mouseMoveHandler);
 
-			chartInstance.zoom._mouseUpHandler = function(event){
+			chartInstance.zoom._mouseUpHandler = function(chartEvent){
+				if (!chartInstance.options.zoom.drag) {
+					return;
+				}
+
 				if (chartInstance.zoom._dragZoomStart) {
+					var event = chartEvent.native;
 					var chartArea = chartInstance.chartArea;
 					var yAxis = getYAxis(chartInstance);
 					var beginPoint = chartInstance.zoom._dragZoomStart;
@@ -391,19 +410,23 @@ var zoomPlugin = {
 					var zoom = 1 + ((chartDistance - dragDistance) / chartDistance );
 
 					if (dragDistance > 0) {
+						chartInstance.zoom._dragZoomStart = null;
+						chartInstance.zoom._dragZoomEnd = null;
+
 						doZoom(chartInstance, zoom, {
 							x: (dragDistance / 2) + startX,
 							y: (yAxis.bottom - yAxis.top) / 2,
 						});
 					}
-
-					chartInstance.zoom._dragZoomStart = null;
-					chartInstance.zoom._dragZoomEnd = null;
 				}
 			};
-			node.addEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-		} else {
+			Chart.platform.addEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
+
 			chartInstance.zoom._wheelHandler = function(event) {
+				if (chartInstance.options.zoom.drag) {
+					return;
+				}
+
 				var rect = event.target.getBoundingClientRect();
 				var offsetX = event.clientX - rect.left;
 				var offsetY = event.clientY - rect.top;
@@ -481,6 +504,10 @@ var zoomPlugin = {
 
 			var currentDeltaX = null, currentDeltaY = null, panning = false;
 			var handlePan = function handlePan(e) {
+				if (!options.pan || !options.pan.enabled) {
+					return;
+				}
+
 				if (currentDeltaX !== null && currentDeltaY !== null) {
 					panning = true;
 					var deltaX = e.deltaX - currentDeltaX;
@@ -513,6 +540,24 @@ var zoomPlugin = {
 			node.addEventListener('click', chartInstance.zoom._ghostClickHandler);
 
 			chartInstance._mc = mc;
+		}
+	},
+
+	beforeDraw: function(chartInstance) {
+		var datasets = chartInstance.data.datasets;
+		var meta, i, j, ilen, jlen;
+
+		for (i = 0, ilen = datasets.length; i < ilen; ++i) {
+			if (!chartInstance.isDatasetVisible(i)) {
+				continue;
+			}
+
+			meta = chartInstance.getDatasetMeta(i);
+			for (j = 0, jlen = meta.data.length; j < jlen; ++j) {
+				var view = meta.data[j]._view;
+				var xScale = meta.data[j]._xScale;
+				view.skip = (view.x < xScale.left || view.x > xScale.right);
+			}
 		}
 	},
 
@@ -550,11 +595,10 @@ var zoomPlugin = {
 			var options = chartInstance.options;
 			var node = chartInstance.zoom.node;
 
-			if (options.zoom && options.zoom.drag) {
-				node.removeEventListener('mousedown', chartInstance.zoom._mouseDownHandler);
-				node.removeEventListener('mousemove', chartInstance.zoom._mouseMoveHandler);
-				node.removeEventListener('mouseup', chartInstance.zoom._mouseUpHandler);
-			} else {
+			if (options.zoom && options.zoom.enabled) {
+				Chart.platform.removeEventListener(chartInstance, 'mousedown', chartInstance.zoom._mouseDownHandler);
+				Chart.platform.removeEventListener(chartInstance, 'mousemove', chartInstance.zoom._mouseMoveHandler);
+				Chart.platform.removeEventListener(chartInstance, 'mouseup', chartInstance.zoom._mouseUpHandler);
 				node.removeEventListener('wheel', chartInstance.zoom._wheelHandler);
 			}
 
