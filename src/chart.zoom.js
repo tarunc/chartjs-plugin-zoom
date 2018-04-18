@@ -322,24 +322,26 @@ var zoomPlugin = {
 		chartInstance.actualMinX = (_.minBy(data, 'x') || { x: time.min }).x;
 		chartInstance.actualMaxX = (_.maxBy(data, 'x') || { x: time.max }).x;
 
-		const updateData = _.debounce((chartInstance, min, max) => {
+		const updateData = _.debounce((chartInstance, min, max, actualMinX, actualMaxX) => {
 			if (!chartInstance || chartInstance.loading) {
 			  console.trace('Already Loading A Graph...', min, max);
 			  return;
 			}
 
-			let actualMinX = chartInstance.actualMinX;
-			let actualMaxX = chartInstance.actualMaxX;
 			if (min < actualMinX || max > actualMaxX || min > actualMaxX || max < actualMinX) {
 			  chartInstance.loading = true;
+			  console.log('Requesting:', { min: min, max: max }, 'Have:', { min: actualMinX, max: actualMaxX });
 			  return helpers.callback(chartInstance.options.pan.getDynamicData, [{ min: min, max: max }, { min: actualMinX, max: actualMaxX }], chartInstance).then(d => {
-				  console.log('retrieved', d);
 				  if (!d) {
 					  return;
 				  }
+
+				  console.log('Got:', d, 'Have:', { min: actualMinX, max: actualMaxX });
 				  if (chartInstance.actualMinX !== d.min && chartInstance.actualMaxX !== d.max) {
 					  chartInstance.data.datasets[0].data = d.data;
+					  console.log('Replacing cuz none are the same');
 				  } else {
+				    console.log('Adding');
 					Array.prototype.unshift.apply(chartInstance.data.datasets[0].data, d.data);
 				  }
 
@@ -354,7 +356,10 @@ var zoomPlugin = {
 
 		const beforeUpdateOnPan = (min, max) => {
 			helpers.callback(chartInstance.options.pan.beforeUpdate, [min, max], chartInstance);
-			return updateData(chartInstance, min, max);
+
+			let actualMinX = chartInstance.actualMinX;
+			let actualMaxX = chartInstance.actualMaxX;
+			return updateData(chartInstance, min, max, actualMinX, actualMaxX);
 		};
 
 		const afterUpdateOnPan = (min, max) => {
