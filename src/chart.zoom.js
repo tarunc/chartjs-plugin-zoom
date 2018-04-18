@@ -336,17 +336,12 @@ var zoomPlugin = {
 					  return;
 				  }
 
-				  console.log('Got:', d, 'Have:', { min: actualMinX, max: actualMaxX });
-				  if (chartInstance.actualMinX !== d.min && chartInstance.actualMaxX !== d.max) {
-					  chartInstance.data.datasets[0].data = d.data;
-					  console.log('Replacing cuz none are the same');
-				  } else {
-				    console.log('Adding');
-					Array.prototype.unshift.apply(chartInstance.data.datasets[0].data, d.data);
-				  }
-
+				  const chartData = chartInstance.data.datasets[0].data;
+				  Array.prototype.unshift.apply(chartData, d.data);
 				  chartInstance.actualMinX = d.min;
 				  chartInstance.actualMaxX = d.max;
+				  // Filter the data
+				  chartInstance.data.datasets[0].data = chartData.filter(p => p.x.valueOf() >= d.min && p.x.valueOf() <= d.max);
 				  chartInstance.update(0);
 				  chartInstance.loading = false;
 			  });
