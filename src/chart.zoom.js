@@ -315,6 +315,42 @@ zoomNS.zoomCumulativeDelta = 0;
 // Chartjs Zoom Plugin
 var zoomPlugin = {
 	afterInit: function(chartInstance) {
+		chartInstance.loading = false;
+
+		let data = chartInstance.data.datasets[0].data;
+		const time = chartInstance.scales['x-axis-0'].options.time
+		chartInstance.actualMinX = (_.minBy(data, 'x') || { x: time.min }).x;
+		chartInstance.actualMaxX = (_.maxBy(data, 'x') || { x: time.max }).x;
+
+
+		const beforeUpdateOnPan = (min, max) => {
+			helpers.callback(chartInstance.options.pan.beforeUpdate, [min, max], chartInstance);
+		  if (!chartInstance || chartInstance.loading) {
+			console.trace('Already Loading A Graph...', min, max);
+			return;
+		  }
+
+		  let actualMinX = chartInstance.actualMinX;
+		  let actualMaxX = chartInstance.actualMaxX;
+		  if (min < actualMinX || max > actualMaxX) {
+			chartInstance.loading = true;
+			return helpers.callback(chartInstance.options.pan.getDynamicData, [{ min: min, max: max }, { min: actualMinX, max: actualMaxX }], chartInstance).then(d => {
+				if (!d) {
+					return;
+				}
+				chartInstance.actualMinX = d.min;
+				chartInstance.actualMaxX = d.max;
+				Array.prototype.unshift.apply(chartInstance.data.datasets[0].data, d.data);
+				chartInstance.update();
+				chartInstance.loading = false;
+			});
+		  }
+		};
+
+		const afterUpdateOnPan = (min, max) => {
+			helpers.callback(chartInstance.options.pan.afterUpdate, [min, max], chartInstance);
+		};
+
 		helpers.each(chartInstance.scales, function(scale) {
 			scale.originalOptions = JSON.parse(JSON.stringify(scale.options));
 		});
@@ -327,6 +363,19 @@ var zoomPlugin = {
 				if (timeOptions) {
 					delete timeOptions.min;
 					delete timeOptions.max;
+
+					if (typeof chartInstance.options.pan.getDynamicData === 'function') {
+						scale.options = helpers.configMerge(scale.options, {
+							beforeUpdate(evt) {
+								console.log('BEFORE X_AXIS UPDATE', evt, this);
+								beforeUpdateOnPan(evt.min, evt.max);
+							},
+							afterUpdate(evt) {
+								console.log('AFTER X_AXIS UPDATE', evt, this);
+								afterUpdateOnPan(evt.min, evt.max);
+							}
+						});
+					}
 				}
 
 				if (tickOptions) {
@@ -433,7 +482,7 @@ var zoomPlugin = {
 				event.preventDefault();
 			};
 
-			node.addEventListener('wheel', chartInstance.zoom._wheelHandler);
+			// node.addEventListener('wheel', chartInstance.zoom._wheelHandler);
 		}
 
 		if (Hammer) {
