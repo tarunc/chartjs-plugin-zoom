@@ -337,14 +337,19 @@ var zoomPlugin = {
 				  if (!d) {
 					  return;
 				  }
+				  if (chartInstance.actualMinX !== d.min && chartInstance.actualMaxX !== d.max) {
+					  chartInstance.data.datasets[0].data = d.data;
+				  } else {
+					Array.prototype.unshift.apply(chartInstance.data.datasets[0].data, d.data);
+				  }
+
 				  chartInstance.actualMinX = d.min;
 				  chartInstance.actualMaxX = d.max;
-				  Array.prototype.unshift.apply(chartInstance.data.datasets[0].data, d.data);
 				  chartInstance.update(0);
 				  chartInstance.loading = false;
 			  });
 			}
-		}, 500);
+		}, 300);
 
 
 		const beforeUpdateOnPan = (min, max) => {
