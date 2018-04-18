@@ -324,15 +324,22 @@ var zoomPlugin = {
 
 		const updateData = _.debounce((chartInstance, min, max, actualMinX, actualMaxX) => {
 			if (!chartInstance || chartInstance.loading) {
-			  console.trace('Already Loading A Graph...', min, max);
-			  return;
+				if (chartInstance.loading.min === min && chartInstance.loading.max === max) {
+					console.trace('2. Already Loading A Graph...', min, max);
+					return;
+				}
 			}
 
 			if (min < actualMinX || max > actualMaxX || min > actualMaxX || max < actualMinX) {
-			  chartInstance.loading = true;
+			  chartInstance.loading = { min: min, max: max };
 			  console.log('Requesting:', { min: min, max: max }, 'Have:', { min: actualMinX, max: actualMaxX });
 			  return helpers.callback(chartInstance.options.pan.getDynamicData, [{ min: min, max: max }, { min: actualMinX, max: actualMaxX }], chartInstance).then(d => {
 				  if (!d) {
+					  return;
+				  }
+
+				  if (chartInstance.loading.min !== min && chartInstance.loading.max !== max) {
+					  console.trace('3. Recieved data for...', min, max, 'but really wanted', chartInstance.loading);
 					  return;
 				  }
 
@@ -346,19 +353,28 @@ var zoomPlugin = {
 				  chartInstance.loading = false;
 			  });
 			}
-		}, 300);
+		}, 200, {maxWait: 1000});
 
 
 		const beforeUpdateOnPan = (min, max) => {
 			helpers.callback(chartInstance.options.pan.beforeUpdate, [min, max], chartInstance);
 
-			if (!chartInstance || chartInstance.loading) {
-			  console.trace('Already Loading A Graph...', min, max);
+			if (!chartInstance) {
+				// chartInstance.loading = { min: min, max: max };
+			  // console.trace('Already Loading A Graph...', min, max, chartInstance);
 			  return;
 			}
 
 			let actualMinX = chartInstance.actualMinX;
 			let actualMaxX = chartInstance.actualMaxX;
+
+			if (actualMinX < min && actualMaxX > max) {
+			  	console.trace('Already Hava Data...', min, max, actualMinX, actualMaxX);
+				return;
+			}
+			if (chartInstance.loading && chartInstance.loading.min !== min && chartInstance.loading.max !== max) {
+				updateData.cancel();
+			}
 			return updateData(chartInstance, min, max, actualMinX, actualMaxX);
 		};
 
