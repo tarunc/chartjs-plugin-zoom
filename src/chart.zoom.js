@@ -352,6 +352,11 @@ var zoomPlugin = {
 		const beforeUpdateOnPan = (min, max) => {
 			helpers.callback(chartInstance.options.pan.beforeUpdate, [min, max], chartInstance);
 
+			if (!chartInstance || chartInstance.loading) {
+			  console.trace('Already Loading A Graph...', min, max);
+			  return;
+			}
+
 			let actualMinX = chartInstance.actualMinX;
 			let actualMaxX = chartInstance.actualMaxX;
 			return updateData(chartInstance, min, max, actualMinX, actualMaxX);
