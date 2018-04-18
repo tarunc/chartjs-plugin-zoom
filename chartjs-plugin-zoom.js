@@ -365,6 +365,20 @@ var zoomPlugin = {
 
 		helpers.each(chartInstance.scales, function(scale) {
 			scale.originalOptions = JSON.parse(JSON.stringify(scale.options));
+			if (scale.options.time) {
+				if (typeof chartInstance.options.pan.getDynamicData === 'function') {
+					scale.options = helpers.configMerge(scale.options, {
+						beforeUpdate(evt) {
+							console.log('BEFORE X_AXIS UPDATE', evt, this);
+							beforeUpdateOnPan(evt.min, evt.max);
+						},
+						afterUpdate(evt) {
+							console.log('AFTER X_AXIS UPDATE', evt, this);
+							afterUpdateOnPan(evt.min, evt.max);
+						}
+					});
+				}
+			}
 		});
 
 		chartInstance.resetZoom = function() {
@@ -375,19 +389,6 @@ var zoomPlugin = {
 				if (timeOptions) {
 					delete timeOptions.min;
 					delete timeOptions.max;
-
-					if (typeof chartInstance.options.pan.getDynamicData === 'function') {
-						scale.options = helpers.configMerge(scale.options, {
-							beforeUpdate(evt) {
-								console.log('BEFORE X_AXIS UPDATE', evt, this);
-								beforeUpdateOnPan(evt.min, evt.max);
-							},
-							afterUpdate(evt) {
-								console.log('AFTER X_AXIS UPDATE', evt, this);
-								afterUpdateOnPan(evt.min, evt.max);
-							}
-						});
-					}
 				}
 
 				if (tickOptions) {
