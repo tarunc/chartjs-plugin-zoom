@@ -332,16 +332,17 @@ var zoomPlugin = {
 
 		  let actualMinX = chartInstance.actualMinX;
 		  let actualMaxX = chartInstance.actualMaxX;
-		  if (min < actualMinX || max > actualMaxX) {
+		  if (min < actualMinX || max > actualMaxX || min > actualMaxX || max < actualMinX) {
 			chartInstance.loading = true;
 			return helpers.callback(chartInstance.options.pan.getDynamicData, [{ min: min, max: max }, { min: actualMinX, max: actualMaxX }], chartInstance).then(d => {
+				console.log('retrieved', d);
 				if (!d) {
 					return;
 				}
 				chartInstance.actualMinX = d.min;
 				chartInstance.actualMaxX = d.max;
 				Array.prototype.unshift.apply(chartInstance.data.datasets[0].data, d.data);
-				chartInstance.update();
+				chartInstance.update(0);
 				chartInstance.loading = false;
 			});
 		  }
