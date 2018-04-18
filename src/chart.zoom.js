@@ -352,10 +352,9 @@ var zoomPlugin = {
 		};
 
 		helpers.each(chartInstance.scales, function(scale) {
-			scale.originalOptions = JSON.parse(JSON.stringify(scale.options));
 			if (scale.options.time) {
 				if (typeof chartInstance.options.pan.getDynamicData === 'function') {
-					scale.options = helpers.configMerge(scale.options, {
+					scale.options = Object.assign(scale.options, {
 						beforeUpdate(evt) {
 							console.log('BEFORE X_AXIS UPDATE', evt, this);
 							beforeUpdateOnPan(evt.min, evt.max);
@@ -367,6 +366,8 @@ var zoomPlugin = {
 					});
 				}
 			}
+
+			scale.originalOptions = JSON.parse(JSON.stringify(scale.options));
 		});
 
 		chartInstance.resetZoom = function() {
